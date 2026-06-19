@@ -62,13 +62,13 @@ class Character (db.Model):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped [str] = mapped_column (String (20), nullable = False)
-    description: Mapped [str] = mapped_column (String ())
+    description: Mapped [str] = mapped_column (String (100), nullable=True)
 
     planet_id: Mapped [int]= mapped_column (ForeignKey ("planet.id"))
-    planet: Mapped [Planet] = relationship ()
+    planet: Mapped [Planet] = relationship ("Planet")
 
     species_id: Mapped [int]= mapped_column (ForeignKey ("species.id"))
-    species: Mapped [Species] = relationship ()
+    species: Mapped [Species] = relationship ("Species")
 
     gender: Mapped [Gender] = mapped_column (Enum (Gender))
 
@@ -85,7 +85,7 @@ class Character (db.Model):
                 "id": self.species.id,
                 "name": self.species.name
             } if self.species else None,
-            "gender": self.gender.value
+            "gender": self.gender.value if self.gender else None
         }
 
 class Vehicle (db.Model):
@@ -93,7 +93,7 @@ class Vehicle (db.Model):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped [str] = mapped_column (String (20), nullable = False)
-    description: Mapped [str] = mapped_column (String (), nullable = True)
+    description: Mapped [str] = mapped_column (String (100), nullable = True)
 
     def serialize(self):
         return {
