@@ -8,7 +8,7 @@ from flask_swagger import swagger
 from flask_cors import CORS
 from utils import APIException, generate_sitemap
 from admin import setup_admin
-from models import db, User, Character, Planet, Vehicle, Species, Favorite
+from models import db, User, Character, Planet, Vehicle, Species, Favorite, Gender
 #from models import Person
 
 app = Flask(__name__)
@@ -37,13 +37,6 @@ def handle_invalid_usage(error):
 def sitemap():
     return generate_sitemap(app)
 
-#@app.route('/user', methods=['GET'])
-#def handle_hello():
-#    response_body = {
-#        "msg": "Hello, this is your GET /user response "
-#    }
-#    return jsonify(response_body), 200
-
 @app.route ('/character', methods = ['GET'])
 def get_all_characters ():
    characters = Character.query.all()
@@ -55,6 +48,38 @@ def get_character (character_id):
     if character is None:
         raise APIException ("Character is not found", status_code = 404)
     return jsonify (character.serialize ()), 200
+
+@app.route ('/character', methods = ['POST'])
+def add_character ():
+    body = request.get_json()
+
+    planet = Planet.query.get(body["planet_id"])
+    if planet is None:
+        raise APIException("Planet not found", status_code=404)
+
+    species = Species.query.get(body["species_id"])
+    if species is None:
+        raise APIException("Species not found", status_code=404)
+
+    new_character = Character(
+        name=body["name"],
+        description=body["description"],
+        planet_id=body["planet_id"],
+        species_id=body["species_id"],
+        gender=Gender(body["gender"])
+    )
+
+    try:
+        db.session.add (new_character)
+        db.session.commit ()
+    
+    except Exception as e:
+        raise APIException (f"Failed to create character", status_code = 500) from e
+
+    return jsonify ({
+        "msg": "Character was added succesfully",
+        "character": new_character.serialize ()
+    }), 201
 
 @app.route ('/planet', methods = ['GET'])
 def get_all_planets ():

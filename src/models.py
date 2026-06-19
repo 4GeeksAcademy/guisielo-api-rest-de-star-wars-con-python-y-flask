@@ -5,17 +5,21 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 db = SQLAlchemy()
 
+
 class User(db.Model):
     __tablename__ = "user"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped [str] = mapped_column (String (20), nullable = False)
-    surname: Mapped [str] = mapped_column (String (20), nullable = False)
-    username: Mapped [str] = mapped_column (String (10), unique = True, nullable = False)
+    name: Mapped[str] = mapped_column(String(20), nullable=False)
+    surname: Mapped[str] = mapped_column(String(20), nullable=False)
+    username: Mapped[str] = mapped_column(
+        String(10), unique=True, nullable=False)
     email: Mapped[str] = mapped_column(String(20), unique=True, nullable=False)
-    password: Mapped[str] = mapped_column(String (20), nullable=False)
+    password: Mapped[str] = mapped_column(String(20), nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean(), nullable=False)
 
+    def __repr__(self):
+        return self.name
 
     def serialize(self):
         return {
@@ -27,11 +31,16 @@ class User(db.Model):
             # do not serialize the password, its a security breach
         }
 
+
 class Planet (db.Model):
     __tablename__ = "planet"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped [str] = mapped_column (String (20), nullable = False)
+    name: Mapped[str] = mapped_column(String(20), nullable=False)
+    characters = relationship("Character", back_populates="planet")
+
+    def __repr__(self):
+        return self.name
 
     def serialize(self):
         return {
@@ -39,16 +48,22 @@ class Planet (db.Model):
             "name": self.name,
         }
 
+
 class Gender (pyEnum):
-    Female = 1
-    Male = 2
+    Male = 1
+    Female = 2
+
 
 class Species (db.Model):
     __tablename__ = "species"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped [str] = mapped_column (String (20), nullable = False)
-    language: Mapped [str] = mapped_column (String(20), nullable = True)
+    name: Mapped[str] = mapped_column(String(20), nullable=False)
+    language: Mapped[str] = mapped_column(String(20), nullable=True)
+    characters = relationship("Character", back_populates="species")
+
+    def __repr__(self):
+        return self.name
 
     def serialize(self):
         return {
@@ -57,26 +72,32 @@ class Species (db.Model):
             "language": self.language
         }
 
+
 class Character (db.Model):
     __tablename__ = "character"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped [str] = mapped_column (String (20), nullable = False)
-    description: Mapped [str] = mapped_column (String (100), nullable=True)
+    name: Mapped[str] = mapped_column(String(20), nullable=False)
+    description: Mapped[str] = mapped_column(String(100), nullable=True)
 
-    planet_id: Mapped [int]= mapped_column (ForeignKey ("planet.id"))
-    planet: Mapped [Planet] = relationship ("Planet")
+    planet_id: Mapped[int] = mapped_column(ForeignKey("planet.id"))
+    planet: Mapped[Planet] = relationship(
+        "Planet", back_populates="characters")
 
-    species_id: Mapped [int]= mapped_column (ForeignKey ("species.id"))
-    species: Mapped [Species] = relationship ("Species")
+    species_id: Mapped[int] = mapped_column(ForeignKey("species.id"))
+    species: Mapped[Species] = relationship(
+        "Species", back_populates="characters")
 
-    gender: Mapped [Gender] = mapped_column (Enum (Gender))
+    gender: Mapped[Gender] = mapped_column(Enum(Gender))
+
+    def __repr__(self):
+        return self.name
 
     def serialize(self):
         return {
             "id": self.id,
             "name": self.name,
-            "descripcion": self.description,
+            "description": self.description,
             "planet": {
                 "id": self.planet.id,
                 "name": self.planet.name,
@@ -88,12 +109,16 @@ class Character (db.Model):
             "gender": self.gender.value if self.gender else None
         }
 
+
 class Vehicle (db.Model):
     __tablename__ = "vehicle"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped [str] = mapped_column (String (20), nullable = False)
-    description: Mapped [str] = mapped_column (String (100), nullable = True)
+    name: Mapped[str] = mapped_column(String(20), nullable=False)
+    description: Mapped[str] = mapped_column(String(100), nullable=True)
+
+    def __repr__(self):
+        return self.name
 
     def serialize(self):
         return {
@@ -102,28 +127,32 @@ class Vehicle (db.Model):
             "description": self.description
         }
 
+
 class Favorite (db.Model):
     __tablename__ = "favorite"
 
     id: Mapped[int] = mapped_column(primary_key=True)
 
-    user_id: Mapped [int]= mapped_column (ForeignKey ("user.id"))
-    user: Mapped [User] = relationship ()
+    user_id: Mapped[int] = mapped_column(ForeignKey("user.id"))
+    user: Mapped[User] = relationship()
 
-    character_id: Mapped [int] = mapped_column (ForeignKey ("character.id"), nullable=True)
-    character: Mapped [Character] = relationship ()
+    character_id: Mapped[int] = mapped_column(
+        ForeignKey("character.id"), nullable=True)
+    character: Mapped[Character] = relationship()
 
-    planet_id: Mapped [int] = mapped_column (ForeignKey ("planet.id"), nullable=True)
-    planet: Mapped [Planet] = relationship ()
+    planet_id: Mapped[int] = mapped_column(
+        ForeignKey("planet.id"), nullable=True)
+    planet: Mapped[Planet] = relationship()
 
-    vehicle_id: Mapped [int] = mapped_column (ForeignKey ("vehicle.id"), nullable=True)
-    vehicle: Mapped [Vehicle] = relationship ()
+    vehicle_id: Mapped[int] = mapped_column(
+        ForeignKey("vehicle.id"), nullable=True)
+    vehicle: Mapped[Vehicle] = relationship()
 
     def serialize(self):
         return {
             "id": self.id,
             "user": {
-                "id":self.user.id,
+                "id": self.user.id,
                 "name": self.user.name,
             } if self.user else None,
             "character": {
