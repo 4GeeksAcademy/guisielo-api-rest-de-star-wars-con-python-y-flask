@@ -98,17 +98,10 @@ class Character (db.Model):
             "id": self.id,
             "name": self.name,
             "description": self.description,
-            "planet": {
-                "id": self.planet.id,
-                "name": self.planet.name,
-            } if self.planet else None,
-            "species": {
-                "id": self.species.id,
-                "name": self.species.name
-            } if self.species else None,
+            "planet": self.planet.name,
+            "species": self.species.name,
             "gender": self.gender.value if self.gender else None
         }
-
 
 class Vehicle (db.Model):
     __tablename__ = "vehicle"
